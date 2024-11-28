@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Solver</title>
+    <style>
+        /* General Body Styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            animation: backgroundAnimation 10s ease-in-out infinite;
+        }
+
+        /* Animation for Background Gradient */
+        @keyframes backgroundAnimation {
+            0% { background: linear-gradient(45deg, #6a11cb, #2575fc); }
+            50% { background: linear-gradient(45deg, #ff7e5f, #feb47b); }
+            100% { background: linear-gradient(45deg, #6a11cb, #2575fc); }
+        }
+
+        /* Sudoku Board Styling */
+        .sudoku-board {
+            display: grid;
+            grid-template-columns: repeat(9, 50px);
+            grid-template-rows: repeat(9, 50px);
+            gap: 5px;
+            border: 3px solid #fff;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            animation: boardAnimation 1s ease-in-out;
+        }
+
+        /* Animation for Board Appearance */
+        @keyframes boardAnimation {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Input Styling */
+        .sudoku-board input {
+            width: 50px;
+            height: 50px;
+            font-size: 1.5em;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* Highlight input on focus */
+        .sudoku-board input:focus {
+            border-color: #ff7e5f;
+            transform: scale(1.1);
+        }
+
+        /* Solve Button Styling */
+        .btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background-color: #ff7e5f;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Hover effect on Solve Button */
+        .btn:hover {
+            background-color: #feb47b;
+        }
+
+        /* Header Styling */
+        h2 {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Responsive Design */
+        @media screen and (max-width: 768px) {
+            .sudoku-board {
+                grid-template-columns: repeat(9, 40px);
+                grid-template-rows: repeat(9, 40px);
+                gap: 3px;
+            }
+
+            .sudoku-board input {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2em;
+            }
+
+            .btn {
+                font-size: 1em;
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div>
+        <h2>Sudoku Solver</h2>
+        <div class="sudoku-board" id="sudokuBoard"></div>
+        <button class="btn" onclick="solveSudoku()">Solve Sudoku</button>
+    </div>
+
+    <script>
+        const board = [
+            [0, 0, 0, 0, 0, 0, 9, 8, 4],
+            [4, 0, 0, 8, 0, 0, 2, 5, 0],
+            [0, 8, 0, 0, 4, 9, 0, 0, 3],
+            [9, 0, 6, 1, 5, 7, 8, 0, 2],
+            [0, 0, 0, 0, 0, 0, 0, 4, 0],
+            [0, 0, 0, 0, 8, 0, 1, 9, 6],
+            [0, 3, 4, 9, 2, 8, 5, 6, 0],
+            [6, 0, 2, 0, 1, 5, 3, 7, 0],
+            [0, 0, 5, 0, 6, 0, 0, 0, 0]
+        ];
+
+        // Render the Sudoku board
+        function renderBoard() {
+            const boardContainer = document.getElementById("sudokuBoard");
+            boardContainer.innerHTML = '';
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    const input = document.createElement("input");
+                    input.type = "number";
+                    input.value = board[row][col] === 0 ? '' : board[row][col];
+                    input.id = `cell-${row}-${col}`;
+                    input.max = 9;
+                    input.min = 0;
+                    input.addEventListener("input", (e) => updateBoard(row, col, e.target.value));
+                    boardContainer.appendChild(input);
+                }
+            }
+        }
+
+        // Update board array when user input changes
+        function updateBoard(row, col, value) {
+            board[row][col] = value ? parseInt(value) : 0;
+        }
+
+        // Solve Sudoku
+        function solveSudoku() {
+            if (solve(board)) {
+                renderBoard();
+            } else {
+                alert("No solution exists!");
+            }
+        }
+
+        // Backtracking algorithm to solve Sudoku
+        function solve(grid) {
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (grid[row][col] === 0) {
+                        for (let num = 1; num <= 9; num++) {
+                            if (isValid(grid, row, col, num)) {
+                                grid[row][col] = num;
+                                if (solve(grid)) {
+                                    return true;
+                                }
+                                grid[row][col] = 0;
+                            }
+                        }
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        // Check if placing num in grid[row][col] is valid
+        function isValid(grid, row, col, num) {
+            for (let i = 0; i < 9; i++) {
+                if (grid[row][i] === num || grid[i][col] === num) {
+                    return false;
+                }
+            }
+            const startRow = Math.floor(row / 3) * 3;
+            const startCol = Math.floor(col / 3) * 3;
+            for (let i = startRow; i < startRow + 3; i++) {
+                for (let j = startCol; j < startCol + 3; j++) {
+                    if (grid[i][j] === num) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        renderBoard(); // Initial rendering of the Sudoku board
+    </script>
+
+</body>
+</html>
